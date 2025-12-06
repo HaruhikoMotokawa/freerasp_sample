@@ -14,33 +14,58 @@ extension _CallbackExtension on DeviceSecurityRepository {
   /// 脅威検知用コールバックを生成
   ThreatCallback _createThreatCallback() {
     return ThreatCallback(
-      onAppIntegrity: () => _onThreatDetected('App integrity compromised'),
-      onDebug: () => _onDebugModeOnly('Debugger detected'),
-      onPrivilegedAccess: () =>
-          _onThreatDetected('Privileged access (root/jailbreak) detected'),
-      onSimulator: () => _onThreatDetected('Simulator/Emulator detected'),
-      onUnofficialStore: () => _onDebugModeOnly('Unofficial store detected'),
-      onHooks: () => _onThreatDetected('Hooks detected'),
-      onDeviceBinding: () => _onThreatDetected('Device binding violation'),
+      onHooks: () => _handleThreat(_ThreatType.hooks),
+      onDebug: () => _handleThreat(_ThreatType.debug),
+      onPasscode: () => _handleThreat(_ThreatType.passcode),
+      onDeviceID: () => _handleThreat(_ThreatType.deviceId),
+      onSimulator: () => _handleThreat(_ThreatType.simulator),
+      onAppIntegrity: () => _handleThreat(_ThreatType.appIntegrity),
+      onObfuscationIssues: () => _handleThreat(_ThreatType.obfuscationIssues),
+      onDeviceBinding: () => _handleThreat(_ThreatType.deviceBinding),
+      onUnofficialStore: () => _handleThreat(_ThreatType.unofficialStore),
+      onPrivilegedAccess: () => _handleThreat(_ThreatType.privilegedAccess),
       onSecureHardwareNotAvailable: () =>
-          _onThreatDetected('Secure hardware not available'),
-      onSystemVPN: () => _onThreatDetected('System VPN detected'),
-      onDevMode: () => _onDebugModeOnly('Developer mode enabled'),
+          _handleThreat(_ThreatType.secureHardwareNotAvailable),
+      onSystemVPN: () => _handleThreat(_ThreatType.systemVpn),
+      onDevMode: () => _handleThreat(_ThreatType.devMode),
+      onADBEnabled: () => _handleThreat(_ThreatType.adbEnabled),
+      onMalware: (info) => _handleThreat(_ThreatType.malware),
+      onScreenshot: () => _handleThreat(_ThreatType.screenshot),
+      onScreenRecording: () => _handleThreat(_ThreatType.screenRecording),
+      onMultiInstance: () => _handleThreat(_ThreatType.multiInstance),
+      onUnsecureWiFi: () => _handleThreat(_ThreatType.unsecureWifi),
+      onTimeSpoofing: () => _handleThreat(_ThreatType.timeSpoofing),
+      onLocationSpoofing: () => _handleThreat(_ThreatType.locationSpoofing),
     );
   }
 
-  /// 脅威検知時の処理
-  void _onThreatDetected(String message) {
-    log('⚠️ Security threat: $message');
-    _statusController.add(DeviceSecurityStatus.threat(message: message));
-  }
-
-  /// デバッグモードでは無視、リリースモードでは脅威として扱う
-  void _onDebugModeOnly(String message) {
-    if (kDebugMode) {
-      log('🔧 $message (ignored in debug mode)');
+  /// 脅威検知時の共通処理
+  void _handleThreat(_ThreatType type) {
+    // デバッグモードで無視する設定の場合
+    if (kDebugMode && type.ignoreInDebugMode) {
+      logger.d('${type.message}（デバッグモードでは無視）');
       return;
     }
-    _onThreatDetected(message);
+
+    // 危険度に応じた処理
+    switch (type.level) {
+      case _ThreatLevel.block:
+        // アプリをブロック
+        logger.w('セキュリティ脅威: ${type.message}');
+        // TODO: FirebaseCrashlytics.instance.recordError(...);
+
+        // 脅威検知状態を流す
+        _statusController
+            .add(DeviceSecurityStatus.threat(message: type.message));
+
+      case _ThreatLevel.monitor:
+        // Crashlytics等に送信（アプリは継続）
+        logger.i('セキュリティ監視: ${type.message}');
+      // TODO: FirebaseCrashlytics.instance.recordError(...);
+
+      case _ThreatLevel.ignore:
+        // 何もしない（網羅のために定義）
+        break;
+    }
   }
 }

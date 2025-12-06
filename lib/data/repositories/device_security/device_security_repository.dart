@@ -1,14 +1,15 @@
 import 'dart:async';
-import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:freerasp/freerasp.dart';
+import 'package:freerasp_sample/core/log/logger.dart';
 import 'package:freerasp_sample/data/sources/local/talsec.dart';
 import 'package:freerasp_sample/domains/value_object/device_security_status.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'device_security_repository.part_callback.dart';
 part 'device_security_repository.part_talsec_config.dart';
+part 'device_security_repository.part_threat_type.dart';
 
 class DeviceSecurityRepository {
   DeviceSecurityRepository(this.ref);
