@@ -11,6 +11,10 @@ part 'device_security_repository.part_app_talsec_config.dart';
 part 'device_security_repository.part_callback.dart';
 part 'device_security_repository.part_threat_type.dart';
 
+/// 不正端末検知の機能を提供するリポジトリ
+///
+/// freeRASP (Talsec) の初期化とコールバック設定を行い、
+/// 検知された不正端末の状態をストリームで提供する
 class DeviceSecurityRepository {
   DeviceSecurityRepository(this.ref);
   final Ref ref;
