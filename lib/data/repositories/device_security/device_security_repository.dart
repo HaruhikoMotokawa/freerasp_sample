@@ -7,8 +7,8 @@ import 'package:freerasp_sample/data/sources/local/talsec.dart';
 import 'package:freerasp_sample/domains/value_object/device_security_status.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+part 'device_security_repository.part_app_talsec_config.dart';
 part 'device_security_repository.part_callback.dart';
-part 'device_security_repository.part_talsec_config.dart';
 part 'device_security_repository.part_threat_type.dart';
 
 class DeviceSecurityRepository {
@@ -21,11 +21,17 @@ class DeviceSecurityRepository {
   /// セキュリティ状態のストリーム
   Stream<DeviceSecurityStatus> get statusStream => _statusController.stream;
 
+  /// 設定
+  ///
+  /// テストで差し込めるようにgetterにしている
+  TalsecConfig get config => _TalsecConfig.value;
+
   /// リソースの解放
   Future<void> dispose() async {
     await _statusController.close();
   }
 
+  /// Talsec インスタンス
   Talsec get _talsec => ref.read(talsecProvider);
 
   /// 初期化: freeRASP を開始 + コールバックを設定
@@ -33,13 +39,13 @@ class DeviceSecurityRepository {
     // チェック中状態を流す
     _statusController.add(const DeviceSecurityStatus.checking());
 
-    // 検査完了時のコールバック登録
+    // 検査完了時のコールバック登録：安全としみなしてストリームを流す
     _talsec.attachExecutionStateListener(_createExecutionStateCallback());
 
-    // 脅威検知用コールバックの登録
+    // 脅威検知用コールバックの登録：脅威検知時に内容によってストリームを流す
     await _talsec.attachListener(_createThreatCallback());
 
     // freeRASP 開始
-    await _talsec.start(_TalsecConfig.value);
+    await _talsec.start(config);
   }
 }

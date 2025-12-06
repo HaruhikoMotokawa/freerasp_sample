@@ -13,6 +13,17 @@ class DeviceSecurityStatusNotifier extends _$DeviceSecurityStatusNotifier {
     return repository.statusStream;
   }
 
+  // チェック対象が不正端末だった場合チェックが始まると、
+  // 異常系の状態が次々に流れてくる可能性がある。
+  // そして最後にチェック完了が流れてくる。
+  //
+  // 便宜上、チェック完了 == 安全 としている。
+  //
+  // この順番の都合上、一度でも不正端末の状態が流れてきた場合は、
+  // それ以降は状態が変わっても通知しないようにする。
+  //
+  // また、検知される不正の種類は一つとは限らないため、検知されたことはその都度ログを
+  // 残すが、UIの状態は最初に検知されたものを維持するようにする。
   @override
   bool updateShouldNotify(
     AsyncValue<DeviceSecurityStatus> previous,

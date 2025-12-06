@@ -1,8 +1,8 @@
 part of 'device_security_repository.dart';
 
-/// デバイスセキュリティRepositoryの設定
+/// アプリ共通の Talsec 設定
 abstract final class _TalsecConfig {
-  /// 共通設定
+  /// Talsec 設定値
   static final value = TalsecConfig(
     watcherMail: _watcherMail,
     androidConfig: _androidConfig,
