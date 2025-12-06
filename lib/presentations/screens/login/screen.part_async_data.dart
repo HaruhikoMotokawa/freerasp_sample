@@ -56,7 +56,8 @@ class _SafeView extends StatelessWidget {
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: () {
-            // ログイン処理
+            // ホーム画面に遷移
+            context.go(HomeScreen.path);
           },
           child: const Padding(
             padding: EdgeInsets.symmetric(

@@ -46,6 +46,16 @@ class DeviceSecurityRepository {
     await _talsec.attachListener(_createThreatCallback());
 
     // freeRASP 開始
+    //
+    // 原則は初回にのみ呼び出す。
+    // 以後はアプリが生きている限りバックグラウンドで動作し続ける。
     await _talsec.start(config);
+  }
+
+  /// デバック用に脅威を検知した想定でストリームに流す
+  ///
+  /// コールバックを呼び出しているわけではないので注意
+  void simulateThreatDetection(DeviceSecurityStatusThreat threat) {
+    _statusController.add(threat);
   }
 }
