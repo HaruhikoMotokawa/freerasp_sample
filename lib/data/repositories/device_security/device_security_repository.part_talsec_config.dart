@@ -11,8 +11,8 @@ abstract final class _TalsecConfig {
     // killOnBypass: true,
   );
 
-  /// Talsec ポータル向けメール（任意）
-  static const String _watcherMail = 'your_mail@example.com';
+  /// Talsec ポータル向けメール
+  static const _watcherMail = 'your_mail@example.com';
 
   /// Android設定
   static final _androidConfig = AndroidConfig(
