@@ -52,7 +52,7 @@ extension _CallbackExtension on DeviceSecurityRepository {
       case _ThreatLevel.block:
         // アプリをブロック
         logger.w('セキュリティ脅威: ${type.message}');
-        // TODO: FirebaseCrashlytics.instance.recordError(...);
+        // （例）FirebaseCrashlytics.instance.recordError(...);
 
         // 脅威検知状態を流す
         _statusController
@@ -61,7 +61,7 @@ extension _CallbackExtension on DeviceSecurityRepository {
       case _ThreatLevel.monitor:
         // Crashlytics等に送信（アプリは継続）
         logger.i('セキュリティ監視: ${type.message}');
-      // TODO: FirebaseCrashlytics.instance.recordError(...);
+      // （例）FirebaseCrashlytics.instance.recordError(...);
 
       case _ThreatLevel.ignore:
         // 何もしない（網羅のために定義）
