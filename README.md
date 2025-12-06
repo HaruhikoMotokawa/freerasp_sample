@@ -1,52 +1,65 @@
-# base_sample
-
-<img src="thumbnail/base_sample_thumbnail.png" width="300">
+# freeRASP Sample
 
 > [!NOTE]
->  このプロジェクトのFlutterSDKは **3.35.4** です。
+> このプロジェクトのFlutterSDKは **3.35.4** です。
+
 ## 概要
-このプロジェクトはサンプルプロジェクトを作るにあたっての雛形となるプロジェクトです。
 
-この雛形プロジェクトからサンプル用のプロジェクトを構築する流れを以下の記事に記しています。
-[【Flutter】学習・開発効率UP！雛形からサンプル用プロジェクト構築ガイド](https://zenn.dev/harx/articles/23cac8d1e15d35)
+このプロジェクトは [freeRASP](https://pub.dev/packages/freerasp) を使用したFlutterアプリのセキュリティ実装サンプルです。
 
-## VScodeの拡張と設定
+freeRASPは、Runtime Application Self-Protection（RASP）を提供するライブラリで、以下のような脅威を検出できます：
 
-.vscode/settings.jsonには以下の拡張機能を使う前提で設定が書かれています。
-- Code Spell Checker
-  - https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker
-- Better Comments
-  - https://marketplace.visualstudio.com/items?itemName=aaron-bond.better-comments
-- Todo Tree
-  - https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree
+- 🔓 Root化/Jailbreak検出
+- 🖥️ エミュレータ/シミュレータ検出
+- 🐛 デバッガ接続検出
+- 🪝 フッキング（Frida等）検出
+- 📝 アプリ改ざん検出
+- 🏪 非公式ストアからのインストール検出
+- 🔑 パスコード未設定検出
+- その他多数...
 
-## fvmによるバージョン管理
+## 機能
 
-このプロジェクトにはfvmを使用してFlutterのバージョン管理をしています。
+### セキュリティチェック画面
+アプリ起動時にfreeRASPによるセキュリティチェックを実行し、結果を表示します。
 
-[fvm](https://pub.dev/packages/fvm)
+### 脅威検知時の自動対応
+脅威が検知された場合、自動的にログイン画面に戻り、機密データへのアクセスを防ぎます。
 
-## pubspec.yaml
-以下はすでにインストール済みです。不要であれば削除してください。
-  - riverpodとhooks関連
-  - freezedとjson関連
-  - logger
-  - gap
-  - very_good_analysis
-  - derry
-  - rename_app
-  - utility_widgets
-  - go_router
-またderryで使うスクリプトも登録済みです。
+### 脅威シミュレーション（デバッグ用）
+ホーム画面のFABボタンで脅威検知をシミュレートできます。
 
-## analysis_options.yaml
+## セットアップ
 
-リントはvery_good_analysisをもとに各種設定しています。
+### 1. 依存関係のインストール
+```bash
+flutter pub get
+```
 
-## .gitignore
+### 2. コード生成
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+または
+```bash
+derry build_runner
+```
 
-自動生成関連の差分は除外しているので、都度生成が必要です。
-derryコマンドを使用して運用してください。
+### 3. 設定の変更
+`lib/data/repositories/device_security/device_security_repository.part_app_talsec_config.dart` を編集し、以下を設定してください：
+
+- `watcherMail`: Talsecポータル向けのメールアドレス
+- `packageName`: Androidのパッケージ名
+- `signingCertHashes`: 署名証明書のハッシュ
+- `bundleIds`: iOSのBundle ID
+- `teamId`: Apple Developer Team ID
+
+## 使用技術
+
+- **freeRASP**: セキュリティ脅威検出
+- **Riverpod**: 状態管理
+- **Freezed**: イミュータブルクラス生成
+- **go_router**: 画面遷移
 
 ## アーキテクチャ
 
@@ -54,43 +67,33 @@ RiverpodArchitectureを基本としています。
 
 [Flutter App Architecture with Riverpod: An Introduction](https://codewithandrea.com/articles/flutter-app-architecture-riverpod-introduction/)
 
-主要なディレクトリ構造は以下のとおりです。
+### 主要なディレクトリ構造
 
 ```
 lib
-├── applications
-│   └── services
 ├── core
-│   ├── constants
-│   │   └── constants.dart
-│   ├── log
-│   │   └── logger.dart
-│   └── router
+│   ├── constants/        # 定数
+│   ├── log/              # ロガー
+│   └── router/           # ルーティング
 ├── data
-│   ├── repositories
-│   └── sources
-│       ├── local
-│       └── remote
+│   ├── repositories/
+│   │   └── device_security/  # freeRASP関連のリポジトリ
+│   └── sources/
+│       └── local/        # Talsecインスタンス
 ├── domains
-│   ├── entities
-│   └── models
+│   └── value_object/     # DeviceSecurityStatus等
 ├── main
-│   ├── app_startup
-│   │   ├── consumer.dart
-│   │   ├── provider.dart
-│   │   └── provider.g.dart
-│   ├── main_app
-│   │   ├── error.dart
-│   │   ├── loading.dart
-│   │   └── main_app.dart
-│   └── main.dart
+│   ├── app_startup/      # アプリ起動時の初期化
+│   └── main_app/         # メインアプリ
 └── presentations
-    ├── screens
-    │   └── home
-    │       ├── screen.dart
-    │       ├── view_model.dart
-    │       └── view_model.g.dart
-    ├── shared
-    └── theme
-        └── theme.dart
+    ├── screens/
+    │   ├── home/         # ホーム画面
+    │   └── login/        # ログイン（セキュリティチェック）画面
+    └── theme/            # テーマ
 ```
+
+## 参考リンク
+
+- [freeRASP - pub.dev](https://pub.dev/packages/freerasp)
+- [freeRASP - GitHub](https://github.com/AcuteaElf/Free-RASP-Flutter)
+- [Talsec Security](https://www.talsec.app/)
