@@ -1,7 +1,7 @@
 part of 'device_security_repository.dart';
 
 /// 現在の値を保持するStreamController
-class _StatusStreamController {
+final class _StatusStreamController {
   /// 現在の値（初期値は checking）
   DeviceSecurityStatus _value = const DeviceSecurityStatus.checking();
 
