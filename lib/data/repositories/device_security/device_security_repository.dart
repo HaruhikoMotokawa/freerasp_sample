@@ -37,9 +37,7 @@ class DeviceSecurityRepository {
   Stream<DeviceSecurityStatus> watch() => _statusController.watch();
 
   /// リソースの解放
-  Future<void> dispose() async {
-    await _statusController.close();
-  }
+  Future<void> dispose() async => _statusController.close();
 
   /// 初期化: freeRASP を開始 + コールバックを設定
   Future<void> init() async {
