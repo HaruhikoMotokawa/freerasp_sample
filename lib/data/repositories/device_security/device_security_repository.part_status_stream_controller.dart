@@ -14,9 +14,19 @@ final class _StatusStreamController {
   bool get isSafe => _value is! DeviceSecurityStatusThreat;
 
   /// 値を更新してストリームに流す
-  void add(DeviceSecurityStatus value) {
+  void _add(DeviceSecurityStatus value) {
     _value = value;
     _controller.add(value);
+  }
+
+  /// 安全状態を通知
+  void addSafe() {
+    _add(const DeviceSecurityStatus.safe());
+  }
+
+  /// 脅威検出を通知
+  void addThreat(String message) {
+    _add(DeviceSecurityStatus.threat(message: message));
   }
 
   /// 現在の値を流してからストリームを返す

@@ -7,7 +7,7 @@ extension _CallbackExtension on DeviceSecurityRepository {
       onAllChecksDone: () {
         // 初期スキャン完了時、脅威が検出されていなければ安全
         if (_statusController.isSafe) {
-          _statusController.add(const DeviceSecurityStatus.safe());
+          _statusController.addSafe();
         }
       },
     );
@@ -58,8 +58,7 @@ extension _CallbackExtension on DeviceSecurityRepository {
         // まだ脅威が検出されていない場合のみストリームに流す
         // ２種類目の脅威以降は通知しない
         if (_statusController.isSafe) {
-          _statusController
-              .add(DeviceSecurityStatus.threat(message: type.message));
+          _statusController.addThreat(type.message);
         }
 
       case _ThreatLevel.monitor:

@@ -57,7 +57,7 @@ class DeviceSecurityRepository {
   /// デバック用に脅威を検知した想定でストリームに流す
   ///
   /// コールバックを呼び出しているわけではないので注意
-  void simulateThreatDetection(DeviceSecurityStatusThreat threat) {
-    _statusController.add(threat);
+  void simulateThreatDetection(String message) {
+    _statusController.addThreat(message);
   }
 }

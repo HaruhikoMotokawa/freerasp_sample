@@ -55,7 +55,7 @@ class HomeScreen extends ConsumerWidget {
         onPressed: () {
           // 脅威検知をシミュレート
           ref.read(deviceSecurityRepositoryProvider).simulateThreatDetection(
-                const DeviceSecurityStatusThreat(message: 'シミュレートされた脅威'),
+                'シミュレートされた脅威',
               );
         },
         tooltip: '脅威をシミュレート',
