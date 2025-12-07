@@ -23,7 +23,8 @@ class LoginScreen extends ConsumerWidget {
       ),
       body: Center(
         child: switch (asyncSecurityStatus) {
-          AsyncData(value: final status) => _SecurityStatusView(status: status),
+          AsyncValue(value: final status?) =>
+            _SecurityStatusView(status: status),
           AsyncError(:final error) => Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

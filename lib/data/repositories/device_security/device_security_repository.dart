@@ -9,6 +9,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'device_security_repository.part_app_talsec_config.dart';
 part 'device_security_repository.part_callback.dart';
+part 'device_security_repository.part_status_stream_controller.dart';
 part 'device_security_repository.part_threat_type.dart';
 
 /// 不正端末検知の機能を提供するリポジトリ
@@ -20,29 +21,28 @@ class DeviceSecurityRepository {
   final Ref ref;
 
   /// セキュリティ状態のストリームコントローラー
-  final _statusController = StreamController<DeviceSecurityStatus>.broadcast();
+  final _statusController = _StatusStreamController();
 
-  /// セキュリティ状態のストリーム
-  Stream<DeviceSecurityStatus> get statusStream => _statusController.stream;
+  /// Talsec インスタンス
+  Talsec get _talsec => ref.read(talsecProvider);
 
   /// 設定
   ///
   /// テストで差し込めるようにgetterにしている
   TalsecConfig get config => _TalsecConfig.value;
 
+  /// セキュリティ状態を監視するストリーム
+  ///
+  /// 購読開始時に現在の状態を即座に流し、以降は状態変化時に通知する
+  Stream<DeviceSecurityStatus> watch() => _statusController.watch();
+
   /// リソースの解放
   Future<void> dispose() async {
     await _statusController.close();
   }
 
-  /// Talsec インスタンス
-  Talsec get _talsec => ref.read(talsecProvider);
-
   /// 初期化: freeRASP を開始 + コールバックを設定
   Future<void> init() async {
-    // チェック中状態を流す
-    _statusController.add(const DeviceSecurityStatus.checking());
-
     // 検査完了時のコールバック登録：安全としみなしてストリームを流す
     _talsec.attachExecutionStateListener(_createExecutionStateCallback());
 

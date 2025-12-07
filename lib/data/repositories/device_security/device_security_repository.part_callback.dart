@@ -5,8 +5,10 @@ extension _CallbackExtension on DeviceSecurityRepository {
   RaspExecutionStateCallback _createExecutionStateCallback() {
     return RaspExecutionStateCallback(
       onAllChecksDone: () {
-        // 検査完了時点で脅威が検出されていなければ安全
-        _statusController.add(const DeviceSecurityStatus.safe());
+        // 初期スキャン完了時、脅威が検出されていなければ安全
+        if (_statusController.isSafe) {
+          _statusController.add(const DeviceSecurityStatus.safe());
+        }
       },
     );
   }
@@ -50,18 +52,19 @@ extension _CallbackExtension on DeviceSecurityRepository {
     // 危険度に応じた処理
     switch (type.level) {
       case _ThreatLevel.block:
-        // アプリをブロック
+        // Crashlytics等に送信などを想定
         logger.w('セキュリティ脅威: ${type.message}');
-        // （例）FirebaseCrashlytics.instance.recordError(...);
 
-        // 脅威検知状態を流す
-        _statusController
-            .add(DeviceSecurityStatus.threat(message: type.message));
+        // まだ脅威が検出されていない場合のみストリームに流す
+        // ２種類目の脅威以降は通知しない
+        if (_statusController.isSafe) {
+          _statusController
+              .add(DeviceSecurityStatus.threat(message: type.message));
+        }
 
       case _ThreatLevel.monitor:
         // Crashlytics等に送信（アプリは継続）
         logger.i('セキュリティ監視: ${type.message}');
-      // （例）FirebaseCrashlytics.instance.recordError(...);
 
       case _ThreatLevel.ignore:
         // 何もしない（網羅のために定義）
