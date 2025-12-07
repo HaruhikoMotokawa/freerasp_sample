@@ -53,7 +53,8 @@ class HomeScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // 脅威検知をシミュレート
+          // 脅威検知をシミュレート (実験のためにこの関数の実行を許可する)
+          // ignore: invalid_use_of_visible_for_testing_member
           ref.read(deviceSecurityRepositoryProvider).simulateThreatDetection(
                 'シミュレートされた脅威',
               );

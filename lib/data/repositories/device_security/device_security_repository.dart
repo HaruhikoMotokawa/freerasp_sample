@@ -54,10 +54,13 @@ class DeviceSecurityRepository {
     await _talsec.start(config);
   }
 
+  // coverage:ignore-start
   /// デバック用に脅威を検知した想定でストリームに流す
   ///
   /// コールバックを呼び出しているわけではないので注意
+  @visibleForTesting
   void simulateThreatDetection(String message) {
     _statusController.addThreat(message);
   }
+  // coverage:ignore-end
 }
