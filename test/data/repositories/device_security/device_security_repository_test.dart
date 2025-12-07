@@ -77,12 +77,13 @@ void main() {
       test('onAllChecksDoneが発火するとsafe状態になる', () async {
         // Arrange
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
-        // Act: キャプチャしたコールバックを発火
+        // Act: コールバックを先に発火（内部状態を変更）
         capturedExecutionCallback.onAllChecksDone?.call();
 
-        // Assert: StreamQueueで値を取得して検証
+        // Assert: watch()で取得すると最初からsafe状態
+        // yield _value で変更後の値が返される
+        final streamQueue = StreamQueue(repository.watch());
         final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.safe());
 
@@ -112,18 +113,101 @@ void main() {
       });
     });
 
-    group('ThreatCallback', () {
+    group('ThreatCallback - blockレベル', () {
       test('onHooksが発火するとthreat状態になる', () async {
+        // Arrange
+        await repository.init();
+
+        // Act: コールバックを先に発火（内部状態を変更）
+        capturedThreatCallback.onHooks?.call();
+
+        // Assert: watch()で取得すると最初からthreat状態
+        final streamQueue = StreamQueue(repository.watch());
+        final status = await streamQueue.next;
+        expect(status, isA<DeviceSecurityStatusThreat>());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onDebugが発火してもデバッグモードでは無視される', () async {
         // Arrange
         await repository.init();
         final streamQueue = StreamQueue(repository.watch());
 
         // Act
-        capturedThreatCallback.onHooks?.call();
+        capturedThreatCallback.onDebug?.call();
+
+        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
+        // 状態はcheckingのまま変わらない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onSimulatorが発火してもデバッグモードでは無視される', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onSimulator?.call();
+
+        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
+        // 状態はcheckingのまま変わらない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onAppIntegrityが発火するとthreat状態になる', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onAppIntegrity?.call();
 
         // Assert
         final status = await streamQueue.next;
         expect(status, isA<DeviceSecurityStatusThreat>());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onDeviceBindingが発火するとthreat状態になる', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onDeviceBinding?.call();
+
+        // Assert
+        final status = await streamQueue.next;
+        expect(status, isA<DeviceSecurityStatusThreat>());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onUnofficialStoreが発火してもデバッグモードでは無視される', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onUnofficialStore?.call();
+
+        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
+        // 状態はcheckingのまま変わらない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
 
         // Cleanup
         await streamQueue.cancel();
@@ -145,13 +229,61 @@ void main() {
         await streamQueue.cancel();
       });
 
-      test('onAppIntegrityが発火するとthreat状態になる', () async {
+      test('onMalwareが発火するとthreat状態になる', () async {
         // Arrange
         await repository.init();
         final streamQueue = StreamQueue(repository.watch());
 
         // Act
-        capturedThreatCallback.onAppIntegrity?.call();
+        capturedThreatCallback.onMalware?.call([]);
+
+        // Assert
+        final status = await streamQueue.next;
+        expect(status, isA<DeviceSecurityStatusThreat>());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onMultiInstanceが発火するとthreat状態になる', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onMultiInstance?.call();
+
+        // Assert
+        final status = await streamQueue.next;
+        expect(status, isA<DeviceSecurityStatusThreat>());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onTimeSpoofingが発火するとthreat状態になる', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onTimeSpoofing?.call();
+
+        // Assert
+        final status = await streamQueue.next;
+        expect(status, isA<DeviceSecurityStatusThreat>());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onLocationSpoofingが発火するとthreat状態になる', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onLocationSpoofing?.call();
 
         // Assert
         final status = await streamQueue.next;
@@ -180,6 +312,174 @@ void main() {
         // 注: 2つ目の脅威は無視されるため新しい値は発行されない
         // 現在の状態が最初の脅威のままであることを確認済み
         expect(firstMessage, isNotEmpty);
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+    });
+
+    group('ThreatCallback - monitorレベル', () {
+      test('onPasscodeが発火してもthreat状態にならない（monitor）', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onPasscode?.call();
+
+        // Assert: monitorレベルはストリームに流さない
+        // 状態変化がないので初期状態のまま
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onObfuscationIssuesが発火してもデバッグモードでは無視される', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onObfuscationIssues?.call();
+
+        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
+        // 状態はcheckingのまま変わらない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onSecureHardwareNotAvailableが発火してもthreat状態にならない', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onSecureHardwareNotAvailable?.call();
+
+        // Assert: monitorレベル
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onDevModeが発火してもデバッグモードでは無視される', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onDevMode?.call();
+
+        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
+        // 状態はcheckingのまま変わらない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onADBEnabledが発火してもデバッグモードでは無視される', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onADBEnabled?.call();
+
+        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
+        // 状態はcheckingのまま変わらない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+    });
+
+    group('ThreatCallback - ignoreレベル', () {
+      test('onDeviceIDが発火してもthreat状態にならない（ignore）', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onDeviceID?.call();
+
+        // Assert: ignoreレベルは何もしない
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onSystemVPNが発火してもthreat状態にならない（ignore）', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onSystemVPN?.call();
+
+        // Assert: ignoreレベル
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onScreenshotが発火してもthreat状態にならない（ignore）', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onScreenshot?.call();
+
+        // Assert: ignoreレベル
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onScreenRecordingが発火してもthreat状態にならない（ignore）', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onScreenRecording?.call();
+
+        // Assert: ignoreレベル
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
+      });
+
+      test('onUnsecureWiFiが発火してもthreat状態にならない（ignore）', () async {
+        // Arrange
+        await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
+
+        // Act
+        capturedThreatCallback.onUnsecureWiFi?.call();
+
+        // Assert: ignoreレベル
+        final status = await streamQueue.next;
+        expect(status, const DeviceSecurityStatus.checking());
 
         // Cleanup
         await streamQueue.cancel();
