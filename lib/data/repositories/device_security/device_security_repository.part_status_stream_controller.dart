@@ -20,14 +20,11 @@ final class _StatusStreamController {
   }
 
   /// 安全状態を通知
-  void addSafe() {
-    _add(const DeviceSecurityStatus.safe());
-  }
+  void addSafe() => _add(const DeviceSecurityStatus.safe());
 
   /// 脅威検出を通知
-  void addThreat(String message) {
-    _add(DeviceSecurityStatus.threat(message: message));
-  }
+  void addThreat(String message) =>
+      _add(DeviceSecurityStatus.threat(message: message));
 
   /// 現在の値を流してからストリームを返す
   Stream<DeviceSecurityStatus> watch() async* {
