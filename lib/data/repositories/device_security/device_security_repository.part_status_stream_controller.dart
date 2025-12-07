@@ -7,9 +7,6 @@ final class _StatusStreamController {
 
   final _controller = StreamController<DeviceSecurityStatus>.broadcast();
 
-  /// 現在の値
-  DeviceSecurityStatus get value => _value;
-
   /// 安全な状態かどうか（脅威が検出されていない）
   bool get isSafe => _value is! DeviceSecurityStatusThreat;
 
