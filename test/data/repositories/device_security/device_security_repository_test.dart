@@ -87,23 +87,28 @@ void main() {
   group('watch', () {
     test('初期状態はcheckingを返す', () async {
       // Act
-      final status = await repository.watch().first;
+      final streamQueue = StreamQueue(repository.watch());
+      final status = await streamQueue.next;
 
       // Assert
       expect(status, const DeviceSecurityStatus.checking());
+
+      // Cleanup
+      await streamQueue.cancel();
     });
 
     group('ExecutionStateCallback', () {
       test('onAllChecksDoneが発火するとsafe状態になる', () async {
         // Arrange
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act: コールバックを先に発火（内部状態を変更）
         capturedExecutionCallback.onAllChecksDone?.call();
 
         // Assert: watch()で取得すると最初からsafe状態
         // yield _value で変更後の値が返される
-        final streamQueue = StreamQueue(repository.watch());
+
         final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.safe());
 
@@ -119,16 +124,13 @@ void main() {
         // 先に脅威を検知させる
         capturedThreatCallback.onPrivilegedAccess?.call();
 
+        // Act: onAllChecksDoneを発火
+        capturedExecutionCallback.onAllChecksDone?.call();
+
         // ストリームの現在の状態を確認
         final currentStatus = await streamQueue.next;
         expect(currentStatus, isA<DeviceSecurityStatusThreat>());
 
-        // Act: onAllChecksDoneを発火
-        capturedExecutionCallback.onAllChecksDone?.call();
-
-        // Assert: 脅威状態のまま（状態は変わらないので同じ値）
-        // 注: 状態が変わらない場合、ストリームは新しい値を発行しないので
-        // 現在の状態で検証済み
         await streamQueue.cancel();
       });
     });
@@ -158,12 +160,13 @@ void main() {
         // Arrange
         setUpRepository(enableThreatInDebug: false);
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onDebug?.call();
 
         // Assert: デバッグモードでは無視されるため状態は変化しない
-        final status = await repository.watch().first;
+        final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
       });
 
@@ -171,13 +174,17 @@ void main() {
         // Arrange
         setUpRepository(enableThreatInDebug: false);
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onSimulator?.call();
 
         // Assert: デバッグモードでは無視されるため状態は変化しない
-        final status = await repository.watch().first;
+        final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
       });
 
       test('onAppIntegrityが発火するとthreat状態になる', () async {
@@ -216,13 +223,17 @@ void main() {
         // Arrange
         setUpRepository(enableThreatInDebug: false);
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onUnofficialStore?.call();
 
         // Assert: デバッグモードでは無視されるため状態は変化しない
-        final status = await repository.watch().first;
+        final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
       });
 
       test('onPrivilegedAccessが発火するとthreat状態になる', () async {
@@ -352,13 +363,17 @@ void main() {
         // Arrange
         setUpRepository(enableThreatInDebug: false);
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onObfuscationIssues?.call();
 
         // Assert: デバッグモードでは無視されるため状態は変化しない
-        final status = await repository.watch().first;
+        final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
       });
 
       test('onSecureHardwareNotAvailableが発火してもthreat状態にならない', () async {
@@ -381,26 +396,34 @@ void main() {
         // Arrange
         setUpRepository(enableThreatInDebug: false);
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onDevMode?.call();
 
         // Assert: デバッグモードでは無視されるため状態は変化しない
-        final status = await repository.watch().first;
+        final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
       });
 
       test('onADBEnabledが発火してもデバッグモードでは無視される', () async {
         // Arrange
         setUpRepository(enableThreatInDebug: false);
         await repository.init();
+        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onADBEnabled?.call();
 
         // Assert: デバッグモードでは無視されるため状態は変化しない
-        final status = await repository.watch().first;
+        final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
+
+        // Cleanup
+        await streamQueue.cancel();
       });
     });
 
