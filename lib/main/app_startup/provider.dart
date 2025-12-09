@@ -10,6 +10,6 @@ Future<void> appStartup(Ref ref) async {
   // ...
 
   // freeRASPの初期化
-  final deviceSecurityRepository = ref.read(deviceSecurityRepositoryProvider);
+  final deviceSecurityRepository = ref.read(deviceSecurityRepositoryProvider());
   await deviceSecurityRepository.init();
 }

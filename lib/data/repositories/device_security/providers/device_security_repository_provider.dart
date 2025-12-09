@@ -5,8 +5,14 @@ part 'device_security_repository_provider.g.dart';
 
 /// DeviceSecurityRepositoryのProvider（keepAlive）
 @Riverpod(keepAlive: true)
-DeviceSecurityRepository deviceSecurityRepository(Ref ref) {
-  final repository = DeviceSecurityRepository(ref);
+DeviceSecurityRepository deviceSecurityRepository(
+  Ref ref, {
+  bool enableThreatInDebug = false,
+}) {
+  final repository = DeviceSecurityRepository(
+    ref,
+    enableThreatInDebug: enableThreatInDebug,
+  );
   ref.onDispose(repository.dispose);
   return repository;
 }

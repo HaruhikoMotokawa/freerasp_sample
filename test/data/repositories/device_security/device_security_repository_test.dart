@@ -47,7 +47,11 @@ void main() {
     );
 
     // リポジトリの取得
-    repository = container.read(deviceSecurityRepositoryProvider);
+    repository = container.read(
+      deviceSecurityRepositoryProvider(
+        enableThreatInDebug: true,
+      ),
+    );
   });
 
   group('init', () {

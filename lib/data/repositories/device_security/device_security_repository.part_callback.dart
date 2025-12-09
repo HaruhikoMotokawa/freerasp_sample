@@ -43,8 +43,8 @@ extension _CallbackExtension on DeviceSecurityRepository {
 
   /// 脅威検知時の共通処理
   void _handleThreat(_ThreatType type) {
-    // デバッグモードで無視する設定の場合
-    if (kDebugMode && type.ignoreInDebugMode) {
+    // デバッグモードで無視する設定の場合（テスト用フラグで制御）
+    if (kDebugMode && type.ignoreInDebugMode && !enableThreatInDebug) {
       logger.d('${type.message}（デバッグモードでは無視）');
       return;
     }

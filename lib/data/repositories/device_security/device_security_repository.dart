@@ -17,8 +17,13 @@ part 'device_security_repository.part_threat_type.dart';
 /// freeRASP (Talsec) の初期化とコールバック設定を行い、
 /// 検知された不正端末の状態をストリームで提供する
 class DeviceSecurityRepository {
-  DeviceSecurityRepository(this.ref);
+  DeviceSecurityRepository(this.ref, {required this.enableThreatInDebug});
   final Ref ref;
+
+  /// デバッグモードで脅威検知を有効にするかどうか
+  ///
+  /// テストで差し込めるようにコンストラクタ引数にしている
+  final bool enableThreatInDebug;
 
   /// セキュリティ状態のストリームコントローラー
   final _statusController = _StatusStreamController();
