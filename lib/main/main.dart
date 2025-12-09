@@ -8,8 +8,9 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 /// アプリのエントリーポイント
 void main() {
   runApp(
-    const ProviderScope(
-      child: AppStartupConsumer(
+    ProviderScope(
+      retry: (_, __) => null,
+      child: const AppStartupConsumer(
         onLoaded: MainApp.new,
         onLoading: MainAppLoading.new,
         onError: MainAppError.new,

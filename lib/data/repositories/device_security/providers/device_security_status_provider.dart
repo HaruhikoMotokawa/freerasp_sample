@@ -7,6 +7,6 @@ part 'device_security_status_provider.g.dart';
 /// デバイスセキュリティ状態のProvider
 @Riverpod(keepAlive: true)
 Stream<DeviceSecurityStatus> deviceSecurityStatus(Ref ref) {
-  final repository = ref.read(deviceSecurityRepositoryProvider);
+  final repository = ref.read(deviceSecurityRepositoryProvider());
   return repository.watch();
 }
