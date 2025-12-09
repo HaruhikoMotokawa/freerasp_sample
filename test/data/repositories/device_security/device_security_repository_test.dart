@@ -15,10 +15,31 @@ void main() {
 
   late ProviderContainer container;
   late DeviceSecurityRepository repository;
+  var isRepositoryInitialized = false;
 
   // コールバックをキャプチャするための変数
   late RaspExecutionStateCallback capturedExecutionCallback;
   late ThreatCallback capturedThreatCallback;
+
+  void setUpRepository({bool enableThreatInDebug = true}) {
+    if (isRepositoryInitialized) {
+      container.dispose();
+    }
+    isRepositoryInitialized = true;
+    container = ProviderContainer.test(
+      retry: (_, __) => null,
+      overrides: [
+        talsecProvider.overrideWithValue(mockTalsec),
+      ],
+    );
+
+    // リポジトリの取得
+    repository = container.read(
+      deviceSecurityRepositoryProvider(
+        enableThreatInDebug: enableThreatInDebug,
+      ),
+    );
+  }
 
   setUp(() {
     // モックのリセット
@@ -39,19 +60,14 @@ void main() {
     // start のモック
     when(mockTalsec.start(any)).thenAnswer((_) async {});
 
-    container = ProviderContainer.test(
-      retry: (_, __) => null,
-      overrides: [
-        talsecProvider.overrideWithValue(mockTalsec),
-      ],
-    );
+    setUpRepository();
+  });
 
-    // リポジトリの取得
-    repository = container.read(
-      deviceSecurityRepositoryProvider(
-        enableThreatInDebug: true,
-      ),
-    );
+  tearDown(() {
+    if (isRepositoryInitialized) {
+      container.dispose();
+      isRepositoryInitialized = false;
+    }
   });
 
   group('init', () {
@@ -140,36 +156,28 @@ void main() {
 
       test('onDebugが発火してもデバッグモードでは無視される', () async {
         // Arrange
+        setUpRepository(enableThreatInDebug: false);
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onDebug?.call();
 
-        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
-        // 状態はcheckingのまま変わらない
-        final status = await streamQueue.next;
+        // Assert: デバッグモードでは無視されるため状態は変化しない
+        final status = await repository.watch().first;
         expect(status, const DeviceSecurityStatus.checking());
-
-        // Cleanup
-        await streamQueue.cancel();
       });
 
       test('onSimulatorが発火してもデバッグモードでは無視される', () async {
         // Arrange
+        setUpRepository(enableThreatInDebug: false);
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onSimulator?.call();
 
-        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
-        // 状態はcheckingのまま変わらない
-        final status = await streamQueue.next;
+        // Assert: デバッグモードでは無視されるため状態は変化しない
+        final status = await repository.watch().first;
         expect(status, const DeviceSecurityStatus.checking());
-
-        // Cleanup
-        await streamQueue.cancel();
       });
 
       test('onAppIntegrityが発火するとthreat状態になる', () async {
@@ -206,19 +214,15 @@ void main() {
 
       test('onUnofficialStoreが発火してもデバッグモードでは無視される', () async {
         // Arrange
+        setUpRepository(enableThreatInDebug: false);
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onUnofficialStore?.call();
 
-        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
-        // 状態はcheckingのまま変わらない
-        final status = await streamQueue.next;
+        // Assert: デバッグモードでは無視されるため状態は変化しない
+        final status = await repository.watch().first;
         expect(status, const DeviceSecurityStatus.checking());
-
-        // Cleanup
-        await streamQueue.cancel();
       });
 
       test('onPrivilegedAccessが発火するとthreat状態になる', () async {
@@ -346,19 +350,15 @@ void main() {
 
       test('onObfuscationIssuesが発火してもデバッグモードでは無視される', () async {
         // Arrange
+        setUpRepository(enableThreatInDebug: false);
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onObfuscationIssues?.call();
 
-        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
-        // 状態はcheckingのまま変わらない
-        final status = await streamQueue.next;
+        // Assert: デバッグモードでは無視されるため状態は変化しない
+        final status = await repository.watch().first;
         expect(status, const DeviceSecurityStatus.checking());
-
-        // Cleanup
-        await streamQueue.cancel();
       });
 
       test('onSecureHardwareNotAvailableが発火してもthreat状態にならない', () async {
@@ -369,7 +369,7 @@ void main() {
         // Act
         capturedThreatCallback.onSecureHardwareNotAvailable?.call();
 
-        // Assert: monitorレベル
+        // Assert: monitorレベルはストリームに流さない
         final status = await streamQueue.next;
         expect(status, const DeviceSecurityStatus.checking());
 
@@ -379,36 +379,28 @@ void main() {
 
       test('onDevModeが発火してもデバッグモードでは無視される', () async {
         // Arrange
+        setUpRepository(enableThreatInDebug: false);
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onDevMode?.call();
 
-        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
-        // 状態はcheckingのまま変わらない
-        final status = await streamQueue.next;
+        // Assert: デバッグモードでは無視されるため状態は変化しない
+        final status = await repository.watch().first;
         expect(status, const DeviceSecurityStatus.checking());
-
-        // Cleanup
-        await streamQueue.cancel();
       });
 
       test('onADBEnabledが発火してもデバッグモードでは無視される', () async {
         // Arrange
+        setUpRepository(enableThreatInDebug: false);
         await repository.init();
-        final streamQueue = StreamQueue(repository.watch());
 
         // Act
         capturedThreatCallback.onADBEnabled?.call();
 
-        // Assert: ignoreInDebugMode=true のためデバッグモードでは無視
-        // 状態はcheckingのまま変わらない
-        final status = await streamQueue.next;
+        // Assert: デバッグモードでは無視されるため状態は変化しない
+        final status = await repository.watch().first;
         expect(status, const DeviceSecurityStatus.checking());
-
-        // Cleanup
-        await streamQueue.cancel();
       });
     });
 
