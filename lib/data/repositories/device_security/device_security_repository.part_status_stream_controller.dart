@@ -24,11 +24,24 @@ final class _StatusStreamController {
       _add(DeviceSecurityStatus.threat(message: message));
 
   /// 現在の値を流してからストリームを返す
-  Stream<DeviceSecurityStatus> watch() async* {
-    yield _value;
-    yield* _controller.stream;
+  Stream<DeviceSecurityStatus> watch() {
+    return Stream<DeviceSecurityStatus>.multi((sink) {
+      // 1. controller.stream を購読
+      final subscription = _streamController.stream.listen(
+        sink.add,
+        onError: sink.addError,
+        onDone: sink.close,
+      );
+
+      sink
+        // 2. 現在の値を即座に流す
+        ..add(_value)
+
+        // 3. キャンセル時にクリーンアップ
+        ..onCancel = subscription.cancel;
+    });
   }
 
   /// リソースの解放
-  Future<void> close() => _controller.close();
+  Future<void> close() => _streamController.close();
 }
