@@ -5,7 +5,7 @@ final class _StatusStreamController {
   /// 現在の値（初期値は checking）
   DeviceSecurityStatus _value = const DeviceSecurityStatus.checking();
 
-  final _controller = StreamController<DeviceSecurityStatus>.broadcast();
+  final _streamController = StreamController<DeviceSecurityStatus>.broadcast();
 
   /// 安全な状態かどうか（脅威が検出されていない）
   bool get isSafe => _value is! DeviceSecurityStatusThreat;
@@ -13,7 +13,7 @@ final class _StatusStreamController {
   /// 値を更新してストリームに流す
   void _add(DeviceSecurityStatus value) {
     _value = value;
-    _controller.add(value);
+    _streamController.add(value);
   }
 
   /// 安全状態を通知
