@@ -120,13 +120,17 @@ void main() {
     group('ThreatCallback - blockレベル', () {
       test('onHooksが発火するとthreat状態になる', () async {
         // Arrange
+        final streamQueue = StreamQueue(repository.watch());
         await repository.init();
 
-        // Act: コールバックを先に発火（内部状態を変更）
+        // 最初はchecking状態
+        final initialStatus = await streamQueue.next;
+        expect(initialStatus, const DeviceSecurityStatus.checking());
+
+        // Act
         capturedThreatCallback.onHooks?.call();
 
-        // Assert: watch()で取得すると最初からthreat状態
-        final streamQueue = StreamQueue(repository.watch());
+        // Assert
         final status = await streamQueue.next;
         expect(status, isA<DeviceSecurityStatusThreat>());
 
